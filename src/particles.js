@@ -1,26 +1,35 @@
+export const forceCanvasResize = () => {
+  const canvas = document.getElementById("backgroundCanvas");
+  if (canvas) {
+    canvas.width = window.innerWidth;
+    canvas.height = document.body.scrollHeight;
+  }
+};
+
 export const generateRandomParticles = (numParticles) => {
   const canvas = document.getElementById("backgroundCanvas");
   const ctx = canvas.getContext("2d");
-  const particles = [];
+  let particles = [];
   const colors = ["#FFFFFF", "#FFCC00", "#FF6699", "#66CCFF", "#00CC99"];
 
   // Resize canvas to fill the page
   const resizeCanvas = () => {
     canvas.width = window.innerWidth;
     canvas.height = document.body.scrollHeight;
+    createParticles(); // Buat ulang partikel saat ukuran canvas berubah
   };
 
   // Create particles
   const createParticles = () => {
-    particles.length = 0; // Reset the array
+    particles = []; // Reset the array
     for (let i = 0; i < numParticles; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: Math.random() * 3 + 1,
         color: colors[Math.floor(Math.random() * colors.length)],
-        speedX: Math.random() * 4 - 2, // Rentang kecepatan: -1 hingga 1
-        speedY: Math.random() * 4 - 2, // Rentang kecepatan: -1 hingga 1
+        speedX: Math.random() * 2 - 1, // Rentang kecepatan: -1 hingga 1
+        speedY: Math.random() * 2 - 1, // Rentang kecepatan: -1 hingga 1
       });
     }
   };
@@ -45,7 +54,6 @@ export const generateRandomParticles = (numParticles) => {
 
   // Initialize canvas and particles
   resizeCanvas();
-  createParticles();
   drawParticles();
 
   // Update canvas size on resize and scroll

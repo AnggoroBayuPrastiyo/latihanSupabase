@@ -1,3 +1,4 @@
+// StudentTable.jsx
 import React from "react";
 
 const StudentTable = ({
@@ -6,6 +7,7 @@ const StudentTable = ({
   onSelectAll,
   onSelectRow,
   selectedRows,
+  handleMultipleSelect, // Terima fungsi ini sebagai prop
 }) => {
   return (
     <div className="overflow-x-auto mt-6">
@@ -37,7 +39,7 @@ const StudentTable = ({
                 <input
                   type="checkbox"
                   checked={selectedRows.includes(val.id)}
-                  onChange={() => onSelectRow(val.id)}
+                  onChange={(e) => handleMultipleSelect(e, val.id)} // Panggil fungsi dengan ID yang benar
                 />
               </td>
               <td className="p-2">{val.id}</td>

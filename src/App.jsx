@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useEffect, useState } from "react";
 import useFetchData from "./components/useFetchData";
 import StudentForm from "./components/StudentForm";
@@ -5,15 +6,45 @@ import StudentTable from "./components/StudentTable";
 import supabase from "./connector";
 import Chance from "chance";
 import "./background-animations.css";
-import { generateRandomParticles } from "./particles"; // Import fungsi
+import { generateRandomParticles, forceCanvasResize } from "./particles";
 
 const App = () => {
   const [refresh, setRefresh] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [loading, setLoading] = useState(false); // Tambahkan state loading
+  const [loading, setLoading] = useState(false);
   const { dataMhs } = useFetchData(refresh);
 
   let chance = new Chance();
+
+  function handleDeleteAll() {
+    let conf = window.confirm("apakah anda yakin menghapus semua data ?");
+    if (!conf) return;
+
+    supabase
+      .from("mahasiswa")
+      .delete()
+      .in("id", selectedRows)
+      .then((res) => {
+        setRefresh((prev) => !prev);
+      });
+  }
+
+  function handleMultipleSelect(e, id) {
+    const checked = e.target.checked;
+    console.log(
+      `Checkbox with ID ${id} is ${checked ? "checked" : "unchecked"}`
+    ); // Tambahkan log untuk debugging
+
+    setSelectedRows((prev) => {
+      if (checked) {
+        // Tambah ID jika checkbox dicentang
+        return [...prev, id];
+      } else {
+        // Hapus ID jika checkbox tidak dicentang
+        return prev.filter((rowId) => rowId !== id);
+      }
+    });
+  }
 
   function generateData() {
     setLoading(true);
@@ -37,19 +68,19 @@ const App = () => {
       .insert(fakeData)
       .then((res) => {
         if (res.error) {
-          console.error("Error inserting data:", res.error); // Tambahkan log error
+          console.error("Error inserting data:", res.error);
         } else {
-          console.log("Data successfully inserted:", res.data); // Tambahkan log sukses
+          console.log("Data successfully inserted:", res.data);
         }
         setRefresh(!refresh);
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Error inserting data:", error); // Tangani error
+        console.error("Error inserting data:", error);
         setLoading(false);
       });
 
-    console.info("Fake data:", fakeData); // Log data yang akan dimasukkan
+    console.info("Fake data:", fakeData);
   }
 
   const handleSelectAll = (e) => {
@@ -105,13 +136,16 @@ const App = () => {
   };
 
   useEffect(() => {
-    const canvas = document.getElementById("backgroundCanvas");
-    if (canvas) {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      generateRandomParticles(7000); // Panggil fungsi untuk menghasilkan partikel
-    }
-  }, []); // Hanya dijalankan sekali saat komponen dimuat
+    const cleanup = generateRandomParticles(7000);
+
+    return () => {
+      cleanup();
+    };
+  }, []);
+
+  useEffect(() => {
+    forceCanvasResize();
+  }, [dataMhs]);
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center gradient-bg p-4 overflow-hidden">
@@ -121,19 +155,30 @@ const App = () => {
           Form Mahasiswa
         </h1>
         <StudentForm onSubmit={handleSubmit} />
-        <button
-          className="p-2 bg-purple-700 text-white rounded-md font-bold shadow-md"
-          onClick={generateData}
-          disabled={loading}
-        >
-          {loading ? "Generating..." : "Generate Data"}
-        </button>
+        <div className="flex gap-4">
+          <button
+            className="p-2 bg-purple-700 text-white rounded-md font-bold shadow-md"
+            onClick={generateData}
+            disabled={loading}
+          >
+            {loading ? "Generating..." : "Generate Data"}
+          </button>
+          {selectedRows.length !== 0 && (
+            <button
+              className="p-2 bg-red-600 text-white rounded-md font-bold shadow-md"
+              onClick={handleDeleteAll}
+            >
+              Delete All Data
+            </button>
+          )}
+        </div>
         <StudentTable
           data={dataMhs}
           onDelete={handleDelete}
           onSelectAll={handleSelectAll}
           onSelectRow={handleSelectRow}
           selectedRows={selectedRows}
+          handleMultipleSelect={handleMultipleSelect} // Pass the function as a prop
         />
         {loading && <p>Loading data...</p>}
       </div>
